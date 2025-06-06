@@ -1,0 +1,34 @@
+name: Daily Impact Logging
+
+on:
+  schedule:
+    - cron: '30 14 * * *'  # 8:30 AM CST = 14:30 UTC
+  workflow_dispatch:
+
+jobs:
+  log_impact:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install google-auth google-auth-oauthlib google-api-python-client
+
+      - name: Run impact logger
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: indexing/ycharts-search-console-api.json
+        run: |
+          source venv/bin/activate
+          python indexing/test_search_console.py
+
