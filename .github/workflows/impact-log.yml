@@ -23,9 +23,10 @@ jobs:
           pip install --upgrade pip
           pip install google-auth google-auth-oauthlib google-api-python-client
 
+      - name: Recreate service account JSON from secret
+        run: |
+          echo "${{ secrets.SEARCH_CONSOLE_JSON_BASE64 }}" | base64 --decode > indexing/ycharts-search-console-api.json
+
       - name: Run impact logger
-        working-directory: indexing
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ycharts-search-console-api.json
-        run: python test_search_console.py
+        run: python indexing/test_search_console.py
 
