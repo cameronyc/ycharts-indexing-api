@@ -24,7 +24,8 @@ jobs:
           pip install google-auth google-auth-oauthlib google-api-python-client
 
       - name: Run impact logger
+        working-directory: indexing
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: indexing/ycharts-search-console-api.json
-        run: python indexing/test_search_console.py
+          GOOGLE_APPLICATION_CREDENTIALS: ycharts-search-console-api.json
+        run: python test_search_console.py
 
