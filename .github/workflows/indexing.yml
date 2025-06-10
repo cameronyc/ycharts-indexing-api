@@ -2,15 +2,15 @@ name: Daily Indexing API Submission
 
 on:
   schedule:
-    - cron: '0 14 * * *'  # 8:00 AM CST (14:00 UTC)
+    - cron: '0 13 * * *'  # 8 AM CST
   workflow_dispatch:
 
 jobs:
-  index_urls:
+  submit_urls:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -27,8 +27,14 @@ jobs:
         run: |
           echo "${{ secrets.INDEXING_API_JSON_BASE64 }}" | base64 --decode > indexing/ycharts-indexing-api.json
 
-      - name: Run indexing script
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: indexing/ycharts-indexing-api.json
+      - name: Submit URLs for indexing
         run: python indexing/index_url.py
+
+      - name: Commit and push log
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add indexing/indexing_log.csv
+          git commit -m "Update indexing log $(date '+%Y-%m-%d')"
+          git push
 
