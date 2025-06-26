@@ -1,19 +1,15 @@
-import csv
 import os
+import csv
 import time
 from datetime import datetime
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
-# === CONFIG =========================================================
-API_CREDENTIALS = "indexing/ycharts-indexing-api.json"
-
-# • Default to the new rotating list …
-# • …but let prod override it with:  export URLS_CSV_PATH=indexing/urls.csv
-URLS_CSV = os.getenv("URLS_CSV_PATH", "indexing/urls_rotating.csv")
-
-LOG_CSV = "indexing/log.csv"           # keeps a running success/error log
-MAX_SUBMISSIONS = 200                  # daily API quota safety-valve
+# === CONFIG ===
+API_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "indexing/ycharts-indexing-api.json")
+URLS_CSV = "indexing/urls_rotating.csv"
+LOG_CSV = "indexing/log.csv"
+MAX_SUBMISSIONS = 200
 SLEEP_SECONDS = 1                      # polite delay between calls
 # ====================================================================
 
