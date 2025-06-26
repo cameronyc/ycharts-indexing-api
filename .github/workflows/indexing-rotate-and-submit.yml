@@ -1,8 +1,8 @@
 name: Rotate & Submit URLs to Google Indexing API
 
 # --- WHEN IT RUNS ----------------------------------------------------
-# ➊ Every weekday at 13:00 UTC (≈ 8 AM EST)
-# ➋ And anytime you click “Run workflow” manually
+# ➊ Every weekday at 13:00 UTC  (≈ 08:00 EST)
+# ➋ And any time you click “Run workflow” manually
 on:
   schedule:
     - cron: '0 13 * * 1-5'
@@ -15,37 +15,52 @@ jobs:
 
     env:
       PYTHON_VERSION: '3.11'
-      URLS_CSV_PATH: indexing/urls_rotating.csv
+      URLS_CSV_PATH: indexing/urls_rotating.csv          # read by daily_submit.py
 
     steps:
+    # 1️⃣ Check out repo
     - name: Check out repo
       uses: actions/checkout@v4
 
+    # 2️⃣ Set up Python
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    # 3️⃣ Install deps
     - name: Install dependencies
       run: |
-        pip install pandas google-api-python-client google-auth-httplib2 google-auth-oauthlib
+        pip install pandas \
+                    google-api-python-client \
+                    google-auth-httplib2 \
+                    google-auth-oauthlib \
+                    jq
 
-    - name: Write GCP credentials file
+    # 4️⃣ Re-create GCP key file *safely* from the secret
+    #    • ${{ secrets.GCP_INDEXING_KEY }} must be a ONE-LINE, valid JSON string.
+    #    • jq -Rs '.' turns raw text → JSON string
+    #    • jq -r 'fromjson' converts it back to proper formatted JSON
+    - name: Create GCP key file from secret
       run: |
-        echo "${{ secrets.GCP_INDEXING_KEY }}" > gcp_key.json
+        echo "${{ secrets.GCP_INDEXING_KEY }}" | jq -Rs '.' | jq -r 'fromjson' > gcp_key.json
 
+    # 5️⃣ Generate today’s urls_rotating.csv
     - name: Generate urls_rotating.csv
       run: python indexing/generate_rotating_urls.py
 
+    # 6️⃣ Submit URLs (max 200) to Indexing API
     - name: Submit URLs (max 200) to Indexing API
       run: |
         export GOOGLE_APPLICATION_CREDENTIALS=gcp_key.json
         python indexing/daily_submit.py
 
+    # 7️⃣ Upload log as artifact
     - name: Upload log.csv as artifact
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: indexing-log-${{ github.run_id }}
         path: indexing/log.csv
+
 
